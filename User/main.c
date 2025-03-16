@@ -16,17 +16,14 @@
 
 // 3. PID每40ms触发时，读取当前最新的卡尔曼滤波输出作为当前温度值。
 
-	
 int key_num;
 int PWM;
 int RP_1, RP_2, RP_3, RP_4;
 // 目标值，传感器实测值，驱动输出值
-float Actual;
-float Target;
-float Out;	
+float Actual, Target, Out;
 float Kp, Ki, Kd;
-// 当前误差，前一次误差，前前次误差
-float Error0, Error1, Error2;
+// 当前误差，前一次误差, 误差积累
+float Error0, Error1, ErrorInt;
 // Kalman_InitDef kalman;
 
 int main(void)
@@ -48,12 +45,15 @@ int main(void)
 
 	while (1)
 	{
-
-		Kp = RP_GetValue(1) / 4095.0 * 2;
-		Ki = RP_GetValue(2) / 4095.0 * 2;
-		Kd = RP_GetValue(3) / 4095.0 * 2;
+		// Kp = RP_GetValue(1) / 4095.0 * 2;
+		// Ki = RP_GetValue(2) / 4095.0 * 2;
+		// Kd = RP_GetValue(3) / 4095.0 * 2;
+		Kp = 15;
+		Ki = 0.0001;
+		Kd = 0;
 		// 目标温度，先映射到0~50，这个范围可改
-		Target = RP_GetValue(4) / 4095.0 * 50;
+		// Target = RP_GetValue(4) / 4095.0 * 50;
+		Target = 35;
 
 		OLED_Printf(0, 16, OLED_8X16, "Kp:%4.2f", Kp);
 		OLED_Printf(0, 32, OLED_8X16, "Ki:%4.2f", Ki);
@@ -91,22 +91,29 @@ void TIM1_UP_IRQHandler(void)
 			// 采集后的数据进行kalman滤波后再传到此处进行pid计算
 			// 这里应该是调用一次函数才进行卡尔曼迭代，但是应该也可以
 			// Actual = update_Kalman(&kalman, AD_Value) / 4095.0 * 50;
-			Actual = AD_Value;
+			Actual = -0.0274 * AD_Value + 81.47;
 
 			// 更新误差值
-			Error2 = Error1;
 			Error1 = Error0;
 			Error0 = Target - Actual;
 
-			Out += Kp * (Error0 - Error1) + Ki * Error0 + Kd * (Error0 - 2 * Error1 + Error2);
+			if(Ki != 0)
+			{
+				ErrorInt += Error0;
+			}
+			else
+			{
+				ErrorInt = 0;
+			}
 
+			Out = Kp * Error0 + Ki * ErrorInt + Kd * (Error0 - Error1);
+			
 			// 限幅pid输出值
-			if(Out > 100){Out = 100;}
-			if(Out < -100){Out = -100;}
+			if(Out > 30){Out = 100;}
+			if(Out < -30){Out = -100;}
 			
 			// 更新驱动输出
 			driver_SetPWM(Out);
-			LED_Turn();
 		}
 
 		TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
