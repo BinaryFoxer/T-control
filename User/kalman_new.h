@@ -7,6 +7,7 @@ typedef struct {
     double X_prev;   // 上一次的估计值
     double E_est;    // 估计误差
     double E_mea;    // 测量误差（固定值）
+    double Q;        // 过程噪声协方差
 } Kalman_InitDef;
 
 void Kalman_Parameter_Init(Kalman_InitDef *kalmanStruct);

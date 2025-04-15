@@ -3,10 +3,11 @@
 // 卡尔曼滤波器参数初始化
 void Kalman_Parameter_Init(Kalman_InitDef *kalmanStruct)
 {
-    kalmanStruct->X_prev = 20;   // 第一次估计值，不需太精准
-    kalmanStruct->E_est = 1;  // 第一次估计误差，同样不需太精准
-    kalmanStruct->E_mea = 0.033; // 测量误差，需要根据ADC和传感器计算出精确值
+    kalmanStruct->X_prev = 28;   // 第一次估计值，不需太精准
+    kalmanStruct->E_est = 5;  // 第一次估计误差，同样不需太精准
+    kalmanStruct->E_mea = 0.25; // 测量误差，需要根据ADC和传感器计算出精确值
                                 // 如果滤波效果不理想，可能是测量误差不准，这里暂时随便赋值
+    kalmanStruct->Q = 0.4; // 过程噪声，这里暂时随便赋值
 }
 
 
@@ -25,14 +26,14 @@ void Kalman_Parameter_Init(Kalman_InitDef *kalmanStruct)
 // 单次卡尔曼更新，返回滤波后的值
 double update_Kalman(Kalman_InitDef *kalman, double measurement) 
 {
-    // 计算卡尔曼增益
-    double K = kalman->E_est / (kalman->E_est + kalman->E_mea);
-    
-    // 更新估计值
-    double X_new = kalman->X_prev + K * (measurement - kalman->X_prev);
-    
-    // 更新误差估计
-    double E_new = (1 - K) * kalman->E_est;
+    // 预测阶段
+    double X_prior = kalman->X_prev;
+    double E_prior = kalman->E_est + kalman->Q;
+
+    // 更新阶段
+    double K = E_prior / (E_prior + kalman->E_mea);
+    double X_new = X_prior + K * (measurement - X_prior);
+    double E_new = (1 - K) * E_prior;
     
     // 保存状态供下次使用
     kalman->X_prev = X_new;

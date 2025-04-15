@@ -87,6 +87,7 @@
     "kalman_new.h": "c",
     "stdint.h": "c",
     "cmath": "c",
-    "stm32f10x_rcc.h": "c"
+    "stm32f10x_rcc.h": "c",
+    "math.h": "c"
   }
 }

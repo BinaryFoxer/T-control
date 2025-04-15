@@ -40,3 +40,4 @@
 .\objects\main.o: .\Hardware\RP.h
 .\objects\main.o: .\Hardware\Temper.h
 .\objects\main.o: User\kalman_new.h
+.\objects\main.o: C:\Keil_v5\ARM\Complier\Bin\..\include\math.h
